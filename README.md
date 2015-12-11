@@ -1,4 +1,4 @@
-.checkout
+Symfony 2 WeatherApp
 =========
 
-A Symfony project created on December 11, 2015, 1:01 pm.
+This is a small Symfony 2 console application that is requesting Yahoo Weather API (https://developer.yahoo.com/weather/) for weather updates.

@@ -17,7 +17,10 @@ use Doctrine\ORM\EntityManager;
 class WeatherListener
 {
 
-
+    /**
+     * If true there will be no database queries performed
+     * @var bool
+     */
     private $noDatabase;
 
     /**
@@ -40,8 +43,6 @@ class WeatherListener
      */
     private $yahooClient;
 
-
-
     /**
      * WeatherListener constructor.
      * @param EntityManager $entityManager
@@ -57,9 +58,10 @@ class WeatherListener
     }
 
     /**
+     * Function that configures the Listener Service
      * @param bool $noDatabase
      */
-    public function configure($noDatabase)
+    public function configure($noDatabase = false)
     {
         $this->setNoDatabase($noDatabase);
     }

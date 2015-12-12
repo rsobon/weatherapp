@@ -8,7 +8,6 @@
 
 namespace AppBundle\Command;
 
-use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -19,12 +18,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class WeatherWatchCommand extends ContainerAwareCommand
 {
-
-    /**
-     * @var EntityManager
-     */
-    private $em;
-
     protected function configure()
     {
         $this
@@ -36,11 +29,10 @@ class WeatherWatchCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->em = $this->getContainer()->get('doctrine.orm.entity_manager');
-        $yahoo = $this->getContainer()->get('app.integration.yahoo_client');
         $event = $this->getContainer()->get('app.event.weather_listener');
-
         $location = $input->getArgument('location') ?: "London";
+        $output_message = $event->findCurrentWeather($location);
+        $this->printConsoleOutput($output_message, $output);
 
         // capture error output
         $stderr = $output instanceof ConsoleOutputInterface
@@ -50,26 +42,8 @@ class WeatherWatchCommand extends ContainerAwareCommand
 
         while (true) {
             try {
-                $weather = $yahoo->getWeather($location);
-                $output->writeln('Weather for: ' . $weather->getLocation());
-                $output->writeln('Temp: ' . $weather->getTemperature());
-                $output->writeln('Conditions: ' . $weather->getConditions());
-
-                // get the last weather for this location from database
-                if(!$event->getLastWeather()){
-                    $lastWeather = $this->em->getRepository('AppBundle:Weather')->findOneBy(
-                        array('location' => $weather->getLocation()),
-                        array('id' => 'DESC')
-                    );
-                    $event->setLastWeather($lastWeather);
-                }
-
-                // if there is a weather update save to database
-                if($event->compareWeather($weather)) {
-                    $this->em->persist($weather);
-                    $this->em->flush();
-                };
-
+                $this->printConsoleOutput('Quering Yahoo API for weather update.', $output);
+                $event->watchWeather($location);
                 $error = '';
             } catch (\Exception $e) {
                 if ($error != $msg = $e->getMessage()) {
@@ -77,11 +51,23 @@ class WeatherWatchCommand extends ContainerAwareCommand
                     $error = $msg;
                 }
             }
-
             clearstatcache();
             sleep($input->getOption('period'));
         }
     }
 
-
+    /**
+     * @param $output_message
+     */
+    private function printConsoleOutput($output_message, OutputInterface $output) {
+        if(is_array($output_message)) {
+            foreach ($output_message as $value) {
+                if ($value) {
+                    $output->writeln($value);
+                }
+            }
+        } else {
+            $output->writeln($output_message);
+        }
+    }
 }

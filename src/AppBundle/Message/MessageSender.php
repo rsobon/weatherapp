@@ -9,10 +9,23 @@
 namespace AppBundle\Message;
 
 
+/**
+ * This service is supposed to send external messages (like push notifications) with weather updates
+ *
+ * Class MessageSender
+ * @package AppBundle\Message
+ */
 class MessageSender
 {
-    public function SendMessage($message)
+    /**
+     * @param array $message_array
+     */
+    public function SendMessage(array $message_array)
     {
-        printf($message . "\n");
+        foreach ($message_array as $key => $value) {
+            if ($value) {
+                printf($value . "\n");
+            }
+        }
     }
 }

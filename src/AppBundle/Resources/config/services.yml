@@ -13,7 +13,9 @@ services:
     app.event.weather_listener:
         class: AppBundle\Event\WeatherListener
         arguments:
+            entityManager: "@doctrine.orm.entity_manager"
             messageSender: "@app.message.message_sender"
+            yahooClient: "@app.integration.yahoo_client"
 
     app.integration.yahoo_client:
         class: AppBundle\Integration\YahooClient

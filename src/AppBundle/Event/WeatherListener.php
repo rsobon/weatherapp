@@ -10,14 +10,21 @@ namespace AppBundle\Event;
 
 
 use AppBundle\Entity\Weather;
+use AppBundle\Integration\YahooClient;
 use AppBundle\Message\MessageSender;
+use Doctrine\ORM\EntityManager;
 
 class WeatherListener
 {
     /**
      * @var Weather
      */
-    private $lastWeather;
+    private $currentWeather;
+
+    /**
+     * @var EntityManager
+     */
+    private $entityManager;
 
     /**
      * @var MessageSender
@@ -25,37 +32,49 @@ class WeatherListener
     private $messageSender;
 
     /**
-     * WeatherListener constructor.
-     * @param MessageSender $messageSender
-     * @internal param Weather $lastWeather
+     * @var YahooClient
      */
-    public function __construct(MessageSender $messageSender)
-    {
-        $this->messageSender = $messageSender;
-    }
+    private $yahooClient;
 
 
     /**
-     * Returns true and sends a message if either temperature or conditions changed
+     * WeatherListener constructor.
+     * @param EntityManager $entityManager
+     * @param MessageSender $messageSender
+     * @param YahooClient $yahooClient
+     * @internal param Weather $lastWeather
+     */
+    public function __construct(EntityManager $entityManager, MessageSender $messageSender, YahooClient $yahooClient)
+    {
+        $this->entityManager = $entityManager;
+        $this->messageSender = $messageSender;
+        $this->yahooClient = $yahooClient;
+    }
+
+    /**
+     * Watch for changes of either temperature or conditions
      * Returns false if there is no weather update
-     * @param Weather $fetchedWeather
+     * @param $location
      * @return bool
      */
-    public function compareWeather($fetchedWeather)
+    public function watchWeather($location)
     {
+        $fetchedWeather = $this->yahooClient->getWeather($location);
+
         $message_array = array();
-        $message_array['conditions'] = $this->compareConditions($fetchedWeather, $this->lastWeather);
-        $message_array['temp'] = $this->compareTemp($fetchedWeather, $this->lastWeather);
+        $message_array['conditions'] = $this->compareConditions($fetchedWeather, $this->currentWeather);
+        $message_array['temp'] = $this->compareTemp($fetchedWeather, $this->currentWeather);
 
         // check if either conditions or temperature changed
         if (in_array(true, $message_array)) {
-            foreach ($message_array as $key => $value) {
-                if ($value) {
-                    $this->setLastWeather($fetchedWeather);
-                    $this->messageSender->sendMessage($value);
-                }
-            }
+            // send messages
+            $this->messageSender->sendMessage($message_array);
+            // update current weather and save
+            $this->setCurrentWeather($fetchedWeather);
+            $this->entityManager->persist($fetchedWeather);
+            $this->entityManager->flush();
             return true;
+
         }
         return false;
     }
@@ -63,17 +82,17 @@ class WeatherListener
     /**
      * @return mixed
      */
-    public function getLastWeather()
+    public function getCurrentWeather()
     {
-        return $this->lastWeather;
+        return $this->currentWeather;
     }
 
     /**
      * @param mixed $newWeather
      */
-    public function setLastWeather($newWeather)
+    public function setCurrentWeather($newWeather)
     {
-        $this->lastWeather = $newWeather;
+        $this->currentWeather = $newWeather;
     }
 
     /**
@@ -86,17 +105,9 @@ class WeatherListener
     private function compareConditions($fetchedWeather, $lastWeather)
     {
         if (!isset($lastWeather)) {
-            return 'Conditions in ' .
-            $fetchedWeather->getLocation() .
-            ' are ' .
-            $fetchedWeather->getConditions();
+            return sprintf("Conditions in %s are %s", $fetchedWeather->getLocation(), $fetchedWeather->getConditions());
         } else if (isset($lastWeather) && ($fetchedWeather->getConditions() != $lastWeather->getConditions())) {
-            return 'Conditions in ' .
-            $fetchedWeather->getLocation() .
-            ' changed from ' .
-            $lastWeather->getConditions() .
-            ' to ' .
-            $fetchedWeather->getConditions();
+            return sprintf("Conditions in %s changed from %s to %s", $fetchedWeather->getLocation(), $lastWeather->getConditions(), $fetchedWeather->getConditions());
         }
         return false;
     }
@@ -111,20 +122,47 @@ class WeatherListener
     private function compareTemp($fetchedWeather, $lastWeather)
     {
         if (!isset($lastWeather)) {
-            return 'Temperature in ' .
-            $fetchedWeather->getLocation() .
-            ' is ' .
-            $fetchedWeather->getTemperature();
+            return sprintf("Temperature in %s is %s", $fetchedWeather->getLocation(), $fetchedWeather->getTemperature());
         } else if (isset($lastWeather) && ($fetchedWeather->getTemperature() != $lastWeather->getTemperature())) {
-            return 'Temperature in ' .
-            $fetchedWeather->getLocation() .
-            ' changed from ' .
-            $lastWeather->getTemperature() .
-            ' to ' .
-            $fetchedWeather->getTemperature();
+            return sprintf("Temperature in %s changed from %s to %s", $fetchedWeather->getLocation(), $lastWeather->getTemperature(), $fetchedWeather->getTemperature());
         }
         return false;
-
     }
+
+    /**
+     * Queries database for last existing weather entry and returns console output message
+     * @param $location
+     * @return array
+     */
+    public function findCurrentWeather($location)
+    {
+        // just the output for console
+        $output_array = array();
+
+        // get the full location name from Yahoo API
+        $fullLocation = $this->yahooClient->getLocation($location);
+
+        // get the last weather for this location from database
+        if(!isset($this->currentWeather)){
+
+            $output_array[] = "Quering database for weather entries for: " . $fullLocation;
+            $lastWeather = $this->entityManager->getRepository('AppBundle:Weather')->findOneBy(
+                array('location' => $fullLocation),
+                array('id' => 'DESC')
+            );
+
+            if(isset($lastWeather)) {
+                $this->setCurrentWeather($lastWeather);
+                $output_array[] = sprintf("Last weather entry in database for %s:", $fullLocation);
+                $output_array[] = sprintf("Conditions in %s are %s", $this->currentWeather->getLocation(), $this->currentWeather->getConditions());
+                $output_array[] = sprintf("Temperature in %s is %s", $this->currentWeather->getLocation(), $this->currentWeather->getTemperature());
+            } else {
+                $output_array[] = "Not found any weather entries in database for: " . $fullLocation;
+            }
+        }
+        return $output_array;
+    }
+
+
 
 }

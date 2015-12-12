@@ -55,9 +55,10 @@ class WeatherListener
      * Watch for changes of either temperature or conditions
      * Returns false if there is no weather update
      * @param $location
+     * @param bool $noDatabase whether to use the database
      * @return bool
      */
-    public function watchWeather($location)
+    public function watchWeather($location, $noDatabase = false)
     {
         $fetchedWeather = $this->yahooClient->getWeather($location);
 
@@ -71,8 +72,10 @@ class WeatherListener
             $this->messageSender->sendMessage($message_array);
             // update current weather and save
             $this->setCurrentWeather($fetchedWeather);
-            $this->entityManager->persist($fetchedWeather);
-            $this->entityManager->flush();
+            if(!$noDatabase) {
+                $this->entityManager->persist($fetchedWeather);
+                $this->entityManager->flush();
+            }
             return true;
 
         }

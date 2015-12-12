@@ -41,3 +41,10 @@ Add --period option to set how often (in seconds) should application check for w
 ```bash
 $ app/console weather:check London --period=10
 ```
+
+Add --no-database option to ignore saving to database
+```bash
+$ app/console weather:check London --no-database
+```
+
+In order to cancel the weather:watch command simply press **Ctrl+C**

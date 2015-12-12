@@ -24,15 +24,19 @@ class WeatherWatchCommand extends ContainerAwareCommand
             ->setName('weather:watch')
             ->setDescription('Watch the weather in location')
             ->addArgument('location', InputArgument::OPTIONAL, 'Which location would you like to check?')
-            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Set the polling period in seconds', 600);
+            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Set the polling period in seconds', 600)
+            ->addOption('no-database', null, InputOption::VALUE_NONE, 'Use if you do not wish to use database');
+
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $event = $this->getContainer()->get('app.event.weather_listener');
         $location = $input->getArgument('location') ?: "London";
-        $output_message = $event->findCurrentWeather($location);
-        $this->printConsoleOutput($output_message, $output);
+        if(!$input->getOption('no-database')) {
+            $output_message = $event->findCurrentWeather($location);
+            $this->printConsoleOutput($output_message, $output);
+        }
 
         // capture error output
         $stderr = $output instanceof ConsoleOutputInterface
@@ -43,7 +47,7 @@ class WeatherWatchCommand extends ContainerAwareCommand
         while (true) {
             try {
                 $this->printConsoleOutput('Quering Yahoo API for weather update.', $output);
-                $event->watchWeather($location);
+                $event->watchWeather($location, $input->getOption('no-database'));
                 $error = '';
             } catch (\Exception $e) {
                 if ($error != $msg = $e->getMessage()) {

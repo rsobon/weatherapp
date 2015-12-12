@@ -22,7 +22,7 @@ $ app/console doctrine:schema:update
 Usage
 ------------
 
-Run this command in order to display weather condition (enter any city or location as argument):
+Run weather:check command in order to display weather condition (enter any city or location as argument):
 ```bash
 $ app/console weather:check Warsaw
 ```
@@ -30,4 +30,14 @@ $ app/console weather:check Warsaw
 Add --save option to persist weather into database:
 ```bash
 $ app/console weather:check London --save
+```
+
+Run weather:watch command in order to periodically query Yahoo API for weather updates. Application will save to database only if there exists a new weather condition.
+```bash
+$ app/console weather:watch Warsaw
+```
+
+Add --period option to set how often (in seconds) should application check for weather updates (default is 600 seconds):
+```bash
+$ app/console weather:check London --period=10
 ```

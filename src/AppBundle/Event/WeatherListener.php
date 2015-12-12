@@ -16,6 +16,10 @@ use Doctrine\ORM\EntityManager;
 
 class WeatherListener
 {
+
+
+    private $noDatabase;
+
     /**
      * @var Weather
      */
@@ -37,6 +41,7 @@ class WeatherListener
     private $yahooClient;
 
 
+
     /**
      * WeatherListener constructor.
      * @param EntityManager $entityManager
@@ -52,13 +57,20 @@ class WeatherListener
     }
 
     /**
+     * @param bool $noDatabase
+     */
+    public function configure($noDatabase)
+    {
+        $this->setNoDatabase($noDatabase);
+    }
+
+    /**
      * Watch for changes of either temperature or conditions
      * Returns false if there is no weather update
      * @param $location
-     * @param bool $noDatabase whether to use the database
      * @return bool
      */
-    public function watchWeather($location, $noDatabase = false)
+    public function watchWeather($location)
     {
         $fetchedWeather = $this->yahooClient->getWeather($location);
 
@@ -72,7 +84,7 @@ class WeatherListener
             $this->messageSender->sendMessage($message_array);
             // update current weather and save
             $this->setCurrentWeather($fetchedWeather);
-            if(!$noDatabase) {
+            if(!$this->getNoDatabase()) {
                 $this->entityManager->persist($fetchedWeather);
                 $this->entityManager->flush();
             }
@@ -80,6 +92,22 @@ class WeatherListener
 
         }
         return false;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNoDatabase()
+    {
+        return $this->noDatabase;
+    }
+
+    /**
+     * @param mixed $noDatabase
+     */
+    public function setNoDatabase($noDatabase)
+    {
+        $this->noDatabase = $noDatabase;
     }
 
     /**
@@ -165,6 +193,7 @@ class WeatherListener
         }
         return $output_array;
     }
+
 
 
 

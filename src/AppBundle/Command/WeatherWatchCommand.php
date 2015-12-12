@@ -32,8 +32,10 @@ class WeatherWatchCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $event = $this->getContainer()->get('app.event.weather_listener');
+        $event->configure($input->getOption('no-database'));
         $location = $input->getArgument('location') ?: "London";
-        if(!$input->getOption('no-database')) {
+
+        if(!$event->getNoDatabase()) {
             $output_message = $event->findCurrentWeather($location);
             $this->printConsoleOutput($output_message, $output);
         }
@@ -47,7 +49,7 @@ class WeatherWatchCommand extends ContainerAwareCommand
         while (true) {
             try {
                 $this->printConsoleOutput('Quering Yahoo API for weather update.', $output);
-                $event->watchWeather($location, $input->getOption('no-database'));
+                $event->watchWeather($location);
                 $error = '';
             } catch (\Exception $e) {
                 if ($error != $msg = $e->getMessage()) {

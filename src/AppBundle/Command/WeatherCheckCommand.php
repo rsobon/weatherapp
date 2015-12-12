@@ -8,15 +8,12 @@
 
 namespace AppBundle\Command;
 
-use AppBundle\Entity\Weather;
-use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use AppBundle\Integration\YahooClient;
 
 class WeatherCheckCommand extends ContainerAwareCommand
 {
@@ -39,9 +36,10 @@ class WeatherCheckCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        $yahoo = $this->getContainer()->get('app.integration.yahoo_client');
+
         $location = $input->getArgument('location') ?: "London";
 
-        $yahoo = new YahooClient();
         $weather = $yahoo->getWeather($location);
         $output->writeln('weather for: ' . $weather->getLocation());
         $output->writeln('temp: ' . $weather->getTemperature());

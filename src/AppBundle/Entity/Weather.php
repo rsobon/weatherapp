@@ -22,7 +22,6 @@ class Weather
 
 	/**
 	 * @var integer
-	 *
 	 * @ORM\Column(name="id", type="integer")
 	 * @ORM\Id
 	 * @ORM\GeneratedValue(strategy="AUTO")
@@ -30,23 +29,23 @@ class Weather
 	private $id;
 
 	/**
+     * A city
 	 * @var string
-	 *
 	 * @ORM\Column(name="location", type="string", length=255)
 	 */
 	private $location;
 
 	/**
+     * Temperature in celcius
 	 * @var integer
-	 *
 	 * @ORM\Column(name="temperature", type="integer")
 	 */
 	private $temperature;
 
 
 	/**
+     * Weather conditions description
 	 * @var string
-	 *
 	 * @ORM\Column(name="conditions", type="text")
 	 */
 	private $conditions;
@@ -54,7 +53,6 @@ class Weather
 
     /**
      * Get id
-     *
      * @return integer
      */
     public function getId()
@@ -64,9 +62,7 @@ class Weather
 
     /**
      * Set location
-     *
      * @param string $location
-     *
      * @return Weather
      */
     public function setLocation($location)
@@ -78,7 +74,6 @@ class Weather
 
     /**
      * Get location
-     *
      * @return string
      */
     public function getLocation()
@@ -88,9 +83,7 @@ class Weather
 
     /**
      * Set temperature
-     *
      * @param integer $temperature
-     *
      * @return Weather
      */
     public function setTemperature($temperature)
@@ -102,7 +95,6 @@ class Weather
 
     /**
      * Get temperature
-     *
      * @return integer
      */
     public function getTemperature()
@@ -112,9 +104,7 @@ class Weather
 
     /**
      * Set conditions
-     *
      * @param string $conditions
-     *
      * @return Weather
      */
     public function setConditions($conditions)
@@ -126,7 +116,6 @@ class Weather
 
     /**
      * Get conditions
-     *
      * @return string
      */
     public function getConditions()

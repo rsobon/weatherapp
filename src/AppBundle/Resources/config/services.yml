@@ -12,6 +12,11 @@ services:
 #            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
     app.event.weather_listener:
         class: AppBundle\Event\WeatherListener
+        arguments:
+            messageSender: "@app.message.message_sender"
 
     app.integration.yahoo_client:
         class: AppBundle\Integration\YahooClient
+
+    app.message.message_sender:
+        class: AppBundle\Message\MessageSender

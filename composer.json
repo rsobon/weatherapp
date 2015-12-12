@@ -1,5 +1,5 @@
 {
-  "name": "r/.checkout",
+  "name": "weatherapp",
   "license": "proprietary",
   "type": "project",
   "autoload": {
@@ -21,7 +21,6 @@
     "sensio/framework-extra-bundle": "^3.0.2",
     "incenteev/composer-parameter-handler": "~2.0",
     "symfony/console": "^3.0",
-    "symfony/assetic-bundle": "^2.7",
     "stof/doctrine-extensions-bundle": "^1.2"
   },
   "require-dev": {

@@ -10,6 +10,7 @@ namespace AppBundle\Event;
 
 
 use AppBundle\Entity\Weather;
+use AppBundle\Message\MessageSender;
 
 class WeatherListener
 {
@@ -17,6 +18,22 @@ class WeatherListener
      * @var Weather
      */
     private $lastWeather;
+
+    /**
+     * @var MessageSender
+     */
+    private $messageSender;
+
+    /**
+     * WeatherListener constructor.
+     * @param MessageSender $messageSender
+     * @internal param Weather $lastWeather
+     */
+    public function __construct(MessageSender $messageSender)
+    {
+        $this->messageSender = $messageSender;
+    }
+
 
     /**
      * Returns true and sends a message if either temperature or conditions changed
@@ -35,7 +52,7 @@ class WeatherListener
             foreach ($message_array as $key => $value) {
                 if ($value) {
                     $this->setLastWeather($fetchedWeather);
-                    $this->sendMessage($value);
+                    $this->messageSender->sendMessage($value);
                 }
             }
             return true;
@@ -57,14 +74,6 @@ class WeatherListener
     public function setLastWeather($newWeather)
     {
         $this->lastWeather = $newWeather;
-    }
-
-    /**
-     * @param $message
-     */
-    private function sendMessage($message)
-    {
-        printf($message . "\n");
     }
 
     /**

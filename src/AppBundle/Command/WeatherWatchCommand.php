@@ -31,7 +31,7 @@ class WeatherWatchCommand extends ContainerAwareCommand
             ->setName('weather:watch')
             ->setDescription('Watch the weather in location')
             ->addArgument('location', InputArgument::OPTIONAL, 'Which location would you like to check?')
-            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Set the polling period in seconds', 2);
+            ->addOption('period', null, InputOption::VALUE_REQUIRED, 'Set the polling period in seconds', 600);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
